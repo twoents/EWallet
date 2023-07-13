@@ -2,34 +2,19 @@ package org.basalt.ewallet.messageclasses;
 
 public class CreateAccountReq {
     private String username;
-    private String passhash;
+    private String password;
 
-    /**
-     * @return the username
-     */
     public String getUsername() {
         return username;
     }
-
-    /**
-     * @param username the username to set
-     */
     public void setUsername(String username) {
         this.username = username;
     }
-
-    /**
-     * @return the passhash
-     */
-    public String getPasshash() {
-        return passhash;
+    public String getPassword() {
+        return password;
     }
-
-    /**
-     * @param passhash the passhash to set
-     */
-    public void setPasshash(String passhash) {
-        this.passhash = passhash;
+    public void setPassword(String password) {
+        this.password = password;
     }
     
 }

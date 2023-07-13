@@ -9,7 +9,7 @@ org\basalt\ewallet\messageclasses\BalanceReq.class
 org\basalt\ewallet\messageclasses\LoginReq.class
 org\basalt\ewallet\messageclasses\TransactionReq.class
 org\basalt\ewallet\EWallet$4.class
-org\basalt\ewallet\dataclasses\EWTansaction.class
+org\basalt\ewallet\EWallet$8.class
 org\basalt\ewallet\EWallet$1.class
 org\basalt\ewallet\EWallet$6.class
 org\basalt\ewallet\EWallet$5.class
@@ -21,4 +21,6 @@ org\basalt\ewallet\EWallet.class
 org\basalt\ewallet\messageclasses\LoginResp.class
 org\basalt\ewallet\messageclasses\LogoutReq.class
 org\basalt\ewallet\EWallet$3.class
+org\basalt\ewallet\dataclasses\EWTransaction.class
 org\basalt\ewallet\messageclasses\DebitReq.class
+org\basalt\ewallet\messageclasses\BalanceResp.class

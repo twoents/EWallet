@@ -130,7 +130,11 @@ public class DataLayer {
             ps.execute();
             ResultSet rs = ps.getGeneratedKeys();
             rs.next();
-            return( rs.getLong( 1 ) );
+            Long id = rs.getLong( 1 );
+            rs.close();
+            ps.close();
+            conn.close();
+            return( id );
         }
         catch ( Exception e ) {
             e.printStackTrace();
@@ -138,6 +142,24 @@ public class DataLayer {
         return( 0L );
     }
     
-    
+    public int update( String sql, Object ... params ) {
+        try {
+            Connection conn = ds.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            for ( int i = 0; i < params.length; i++ ) {
+                Object o = params[i];
+                ps.setObject(i + 1, o);
+            }
+            int rowsAffected = ps.executeUpdate();
+            ps.close();
+            conn.close();
+                    
+            return( rowsAffected );
+        }
+        catch ( Exception e ) {
+            e.printStackTrace();
+        }
+        return( 0 );
+    }
     
 }

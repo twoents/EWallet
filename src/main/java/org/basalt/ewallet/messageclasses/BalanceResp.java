@@ -4,27 +4,28 @@
  */
 package org.basalt.ewallet.messageclasses;
 
+import java.math.BigDecimal;
+
 /**
  *
  * @author Dewan
  */
-public class LogoutResp {
-    private String status;
+public class BalanceResp {
+    private BigDecimal balance;
 
     /**
-     * @return the status
+     * @return the balance
      */
-    public String getStatus() {
-        return status;
+    public BigDecimal getBalance() {
+        return balance;
     }
 
     /**
-     * @param status the status to set
+     * @param balance the balance to set
      */
-    public void setStatus(String status) {
-        this.status = status;
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
     }
-    
     
     
 }

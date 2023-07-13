@@ -3,12 +3,12 @@ package org.basalt.ewallet.dataclasses;
 import java.math.BigDecimal;
 import java.util.Date;
 
-public class EWTansaction {
+public class EWTransaction {
     private Long id;
     private String description;
     private Date txDate;
     private BigDecimal amount;
-    private long userId;
+    private long walletId;
 
     public Long getId() {
         return id;
@@ -42,11 +42,11 @@ public class EWTansaction {
         this.amount = amount;
     }
 
-    public long getUserId() {
-        return userId;
+    public long getWalletId() {
+        return walletId;
     }
 
-    public void setUserId(long userId) {
-        this.userId = userId;
+    public void setWalletId(long userId) {
+        this.walletId = userId;
     }
 }
