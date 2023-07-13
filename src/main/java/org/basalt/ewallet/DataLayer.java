@@ -24,7 +24,7 @@ public class DataLayer {
     protected String[] getColumnNames( ResultSetMetaData metaData ) throws Exception {
         List<String> columnNames = new ArrayList<>();
         for ( int i = 0; i < metaData.getColumnCount(); i++ ) {
-            columnNames.add( metaData.getColumnName(i));
+            columnNames.add( metaData.getColumnName(i + 1 ));
         }
         return( columnNames.toArray( new String[columnNames.size()]));
     }
@@ -81,7 +81,7 @@ public class DataLayer {
             }
             
             while ( rs.next() ) {
-                Object t = classType.getConstructor().newInstance();
+                T t = classType.getConstructor().newInstance();
                 for ( int i = 0; i < columnNames.length; i++ ) {
                     String colName = columnNames[i];
                     Object o = rs.getObject( colName );
@@ -90,6 +90,7 @@ public class DataLayer {
                         m.invoke(t, o );
                     }
                 }
+                results.add( t );
             }
         }
         catch ( Exception e ) {
