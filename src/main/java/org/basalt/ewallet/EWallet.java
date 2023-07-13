@@ -6,6 +6,12 @@ import com.google.gson.Gson;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
+import java.util.List;
+import java.util.UUID;
+import org.basalt.ewallet.dataclasses.EWSession;
+import org.basalt.ewallet.dataclasses.EWUser;
+import org.basalt.ewallet.messageclasses.LoginReq;
+import org.basalt.ewallet.messageclasses.LoginResp;
 
 public class EWallet {
     
@@ -56,9 +62,38 @@ public class EWallet {
         return( new Handler() {
             @Override
             public void handle(Context ctx) throws Exception {
+                LoginReq req = ctx.bodyAsClass( LoginReq.class );
+                LoginResp resp = new LoginResp();
                 
-                
-                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+                String sql = "select * from ew_user "
+                           + "where ( username = ? ) "
+                           + "  and ( passhash = ? ) ";
+                List<EWUser> userList = dataLayer.query(sql, EWUser.class, req.getUsername(), req.getPassHash() );
+                if ( !userList.isEmpty() ) {
+                    UUID uuid = UUID.randomUUID();
+                    EWUser user = userList.get( 0 );
+                    sql = "with ew_dead_sessions as ( " 
+                        + "    update ew_session " 
+                        + "    set expiry_date = CURRENT_TIMESTAMP " 
+                        + "    where ( user_id = ? ) "
+                        + "      and ( current_timestamp < expiry_date ) "
+                        + "    returning * " 
+                        + "), " 
+                        + "ew_new_session as ( "
+                        + "    insert into ew_session ( expiry_date, token, user_id ) " 
+                        + "    values ( current_timestamp + interval '30 minutes', ?, ? ) " 
+                        + "    returning * " 
+                        + ") " 
+                        + "select * " 
+                        + "from ew_new_session";
+                   List<EWSession> session = dataLayer.query(sql, EWSession.class,  user.getId(), uuid.toString(), user.getId());
+                   resp.setStatus( "OK" );
+                   resp.setToken( session.get(0 ).getToken() );
+                }
+                else {
+                    resp.setStatus( "FAILED" );
+                }
+                ctx.json( resp );
             }
         });
     }
