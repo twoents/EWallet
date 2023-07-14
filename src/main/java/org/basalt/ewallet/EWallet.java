@@ -72,23 +72,18 @@ public class EWallet {
             public void handle(Context ctx) throws Exception {
                 if ( ctx.req().getMethod().equals( "POST") ) {
                 String authHeader = ctx.req().getHeader("X-Custom");
-                for ( String key : ctx.headerMap().keySet() ) {
-                    System.out.println( key + " => " + ctx.headerMap().get( key ));
-                }
-                        //header( "X-Auth" );
-                String token = authHeader.substring(6 );
-                
+                System.out.println( authHeader );
                 String sql = "with s as ( "
                            + "  update ew_session "
-                           + "  set expiry_date = current_timestamp "
+                           + "  set expiry_date = current_timestamp + interval '30 minutes' "
                            + "  where ( token = ? ) "
-                           + "    and ( expiry_date < current_timestamp ) "
+                           + "    and ( expiry_date > current_timestamp ) "
                            + "  returning * "
                            + ") "
                            + "select * from s ";
-                List<EWSession> sessionList = dataLayer.query( sql, EWSession.class, token );
+                List<EWSession> sessionList = dataLayer.query( sql, EWSession.class,  authHeader );
                 if ( !sessionList.isEmpty() ) {
-                    ctx.attribute("userId", sessionList );
+                    ctx.attribute("userId", sessionList.get(0).getUserId() );
                 }
                 else {
                     ctx.status( 401 );
