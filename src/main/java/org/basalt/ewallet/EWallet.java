@@ -8,8 +8,6 @@ import io.javalin.http.Handler;
 import io.javalin.http.servlet.JavalinServletContext;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import org.basalt.ewallet.dataclasses.EWLoginQuery;
 import org.basalt.ewallet.dataclasses.EWSession;
@@ -56,13 +54,13 @@ public class EWallet {
         });
         
         javalin.post( "/createAccount", createAccount() );
-        javalin.post( "/login", doLogin() );
-        javalin.post( "/logout", doLogout() );
-        javalin.post( "/sec/showTransactions", showTransactions() );
-        javalin.post( "/sec/showBalance", showBalance() );
-        javalin.post( "/sec/doCredit", doCredit() );
-        javalin.post( "/sec/doDebit", showTransactions() );
-        javalin.before( "/sec/*", securityHandler() );
+        javalin.post( "/login", login() );
+        javalin.post( "/logout", logout() );
+        javalin.post( "/wal/getTransactions", getTransactions() );
+        javalin.post( "/wal/getBalance", getBalance() );
+        javalin.post( "/wal/doCredit", doCredit() );
+        javalin.post( "/wal/doDebit", doDebit() );
+        javalin.before( "/wal/*", securityHandler() );
         javalin.start( 8000 );
     }
     
@@ -119,7 +117,7 @@ public class EWallet {
         });
     }
     
-    public Handler doLogin() {
+    public Handler login() {
         return( new Handler() {
             @Override
             public void handle(Context ctx) throws Exception {
@@ -161,7 +159,7 @@ public class EWallet {
         });
     }
     
-    public Handler doLogout() {
+    public Handler logout() {
         return( new Handler() {
             @Override
             public void handle(Context ctx) throws Exception {
@@ -189,7 +187,7 @@ public class EWallet {
         });
     }
 
-    public Handler showTransactions() {
+    public Handler getTransactions() {
         return( new Handler() {
             @Override
             public void handle(Context ctx) throws Exception {
@@ -219,7 +217,7 @@ public class EWallet {
         });
     }
     
-    public Handler showBalance() {
+    public Handler getBalance() {
         return( new Handler() {
             @Override
             public void handle(Context ctx) throws Exception {
