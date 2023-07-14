@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.basalt.ewallet.dataclasses.EWLoginQuery;
 import org.basalt.ewallet.dataclasses.EWSession;
 import org.basalt.ewallet.dataclasses.EWTransaction;
 import org.basalt.ewallet.dataclasses.EWUser;
@@ -95,7 +96,7 @@ public class EWallet {
                            + ") "
                            + "select * "
                            + "from t ";                
-                List<EWUser> userList = dataLayer.query(sql, EWUser.class, req.getClass(), req.getPassword() );
+                List<EWUser> userList = dataLayer.query(sql, EWUser.class, req.getUsername(), hashPassword( req.getPassword(),req.getUsername() ) );
                 ctx.json( new CreateAccountResp( userList.get( 0 ).getId() ) );
             }
         });
@@ -130,9 +131,10 @@ public class EWallet {
                         + "select *, "
                         + "       ( select id from ew_wallet where ( user_id = ? ) ) as wallet_id " 
                         + "from ew_new_session";
-                   List<EWSession> session = dataLayer.query(sql, EWSession.class,  user.getId(), uuid.toString(), user.getId());
+                   List<EWLoginQuery> session = dataLayer.query(sql, EWLoginQuery.class,  user.getId(), uuid.toString(), user.getId(), user.getId() );
                    resp.setStatus( "OK" );
                    resp.setToken( session.get(0 ).getToken() );
+                   resp.setWalletId(session.get(0 ).getWalletId());
                 }
                 else {
                     resp.setStatus( "FAILED" );
@@ -180,20 +182,20 @@ public class EWallet {
                     String sql = "with t as ( "
                                + "    select * "
                                + "    from ew_transaction "
-                               + "    where ( wallet_id = ( select id from ew_wallet where ( user_id = ? ) ) ) "
+                               + "    where ( wallet_id = ? ) "
                                + "    order by tx_date desc limit 10 "
                                + " ) "
                                + "select * "
                                + "from t "
                                + "order by tx_date asc ";
-                    transList = dataLayer.query(sql, EWTransaction.class, 1L );
+                    transList = dataLayer.query(sql, EWTransaction.class, req.getWalletId() );
                 }   
                 else {
                     String sql = "select * "
                                + "from ew_transaction "
                                + "where ( tx_date between ? and ? ) "
-                               + "  and ( wallet_id = ( select id from ew_wallet where ( user_id = ? ) ) ) ";
-                    transList = dataLayer.query(sql, EWTransaction.class, req.getFromDate(), req.getToDate(), 1L );
+                               + "  and ( wallet_id = ? ) ";
+                    transList = dataLayer.query(sql, EWTransaction.class, req.getFromDate(), req.getToDate(), req.getWalletId() );
                 }
                 ctx.json( transList );
             }
@@ -241,7 +243,7 @@ public class EWallet {
                            + "from w ";
                 List<EWWallet> walletList = dataLayer.query(sql, EWWallet.class, req.getDescription(), req.getAmount().multiply( BigDecimal.valueOf( -1L ) ), req.getWalletId(), req.getAmount() );
                 CreditResp resp = new CreditResp();
-                resp.setId( walletList.get( 0 ).getId() );
+                resp.setWalletId( walletList.get( 0 ).getId() );
                 resp.setBalance(walletList.get( 0 ).getBalance() );
                 ctx.json( resp );
             }
@@ -269,7 +271,7 @@ public class EWallet {
                            + "from w ";
                 List<EWWallet> walletList = dataLayer.query(sql, EWWallet.class, req.getDescription(), req.getAmount(), req.getWalletId(), req.getAmount() );
                 CreditResp resp = new CreditResp();
-                resp.setId( walletList.get( 0 ).getId() );
+                resp.setWalletId( walletList.get( 0 ).getId() );
                 resp.setBalance(walletList.get( 0 ).getBalance() );
                 ctx.json( resp );
             }
