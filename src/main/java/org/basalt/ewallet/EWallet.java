@@ -5,6 +5,7 @@ import org.basalt.ewallet.messageclasses.CreateAccountReq;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
+import io.javalin.http.servlet.JavalinServletContext;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -67,13 +68,26 @@ public class EWallet {
         return( new Handler() {
             @Override
             public void handle(Context ctx) throws Exception {
-                Map<String,String> headers = ctx.headerMap();
-                Set<String> keys = headers.keySet();
-                for ( String key : keys ) {
-                    System.out.println( key + " => " + headers.get( key ) );
+                String authHeader = ctx.header( "Authorization" );
+                String token = authHeader.substring(6 );
+                
+                String sql = "with s as ( "
+                           + "  update ew_session "
+                           + "  set expiry_date = current_timestamp "
+                           + "  where ( token = ? ) "
+                           + "    and ( expiry_date < current_timestamp ) "
+                           + "  returning * "
+                           + ") "
+                           + "select * from t ";
+                List<EWSession> sessionList = dataLayer.query( sql, EWSession.class, token );
+                if ( !sessionList.isEmpty() ) {
+                    ctx.attribute("userId", sessionList );
+                }
+                else {
+                    ctx.status( 401 );
+                    ( ( JavalinServletContext )ctx ).getTasks().clear();
                 }
             }
-            
         });
     }
     
