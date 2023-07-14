@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 public class DebitResp {
     private Long walletId;
     private BigDecimal balance;
+    private String walName;
 
     public Long getWalletId() {
         return walletId;
@@ -17,5 +18,19 @@ public class DebitResp {
     }
     public void setBalance(BigDecimal balance) {
         this.balance = balance;
+    }
+
+    /**
+     * @return the walName
+     */
+    public String getWalName() {
+        return walName;
+    }
+
+    /**
+     * @param walName the walName to set
+     */
+    public void setWalName(String walName) {
+        this.walName = walName;
     }
 }

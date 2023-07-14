@@ -1,12 +1,17 @@
 package org.basalt.ewallet;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.basalt.ewallet.messageclasses.CreateAccountResp;
 import org.basalt.ewallet.messageclasses.CreateAccountReq;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import io.javalin.http.servlet.JavalinServletContext;
+import io.javalin.json.JavalinJackson;
 import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import org.basalt.ewallet.dataclasses.EWLoginQuery;
@@ -42,6 +47,13 @@ public class EWallet {
         
     }
     
+    
+    /*
+config.jsonMapper(new JavalinJackson().updateMapper(mapper -> {
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+});    
+    
+    */
     public void init() {
         javalin = Javalin.create(config -> {
             config.plugins.enableCors(cors -> {
@@ -51,6 +63,10 @@ public class EWallet {
                     it.exposeHeader( "X-Custom");
                 });
             });
+            config.jsonMapper(new JavalinJackson().updateMapper(mapper -> {
+                SimpleDateFormat sdf = new SimpleDateFormat( "yyyy-MM-dd" );
+                mapper.setDateFormat( sdf );
+            }));    
         });
         
         javalin.post( "/createAccount", createAccount() );
@@ -191,25 +207,22 @@ public class EWallet {
         return( new Handler() {
             @Override
             public void handle(Context ctx) throws Exception {
+                
                 TransactionReq req = ctx.bodyAsClass(TransactionReq.class );
                 List<EWTransaction> transList;
                 if ( ( req.getFromDate() == null ) && ( req.getToDate() == null ) ) {
-                    String sql = "with t as ( "
-                               + "    select * "
-                               + "    from ew_transaction "
-                               + "    where ( wallet_id = ? ) "
-                               + "    order by tx_date desc limit 10 "
-                               + " ) "
-                               + "select * "
-                               + "from t "
-                               + "order by tx_date asc ";
+                    String sql = "select * "
+                               + "from ew_transaction "
+                               + "where ( wallet_id = ? ) "
+                               + "order by tx_date desc limit 10 ";
                     transList = dataLayer.query(sql, EWTransaction.class, req.getWalletId() );
                 }   
                 else {
                     String sql = "select * "
                                + "from ew_transaction "
                                + "where ( tx_date between ? and ? ) "
-                               + "  and ( wallet_id = ? ) ";
+                               + "  and ( wallet_id = ? ) "
+                               + "order by tx_date desc ";
                     transList = dataLayer.query(sql, EWTransaction.class, req.getFromDate(), req.getToDate(), req.getWalletId() );
                 }
                 ctx.json( transList );
@@ -221,7 +234,6 @@ public class EWallet {
         return( new Handler() {
             @Override
             public void handle(Context ctx) throws Exception {
-                
                 Long userId = ctx.attribute("user_id" );
                 
                 BalanceReq req = ctx.bodyAsClass(BalanceReq.class );
@@ -230,6 +242,7 @@ public class EWallet {
                            + "where ( user_id = ? ) ";
                 List<EWWallet> walletList = dataLayer.query(sql, EWWallet.class, userId );
                 BalanceResp resp = new BalanceResp();
+                resp.setWalletId( walletList.get( 0 ).getId() );
                 resp.setBalance( walletList.get( 0 ).getBalance() );
                 resp.setWalName( walletList.get( 0 ).getWalName() );
                 ctx.json(resp);
@@ -250,16 +263,23 @@ public class EWallet {
                            + "), " 
                            + "w as ( " 
                            + "    update ew_wallet " 
-                           + "    set balance = balance + 10 " 
+                           + "    set balance = balance + ? " 
                            + "    where ( id = ? ) " 
                            + "    returning * " 
                            + ") " 
                            + "select * " 
                            + "from w ";
-                List<EWWallet> walletList = dataLayer.query(sql, EWWallet.class, req.getDescription(), req.getAmount().multiply( BigDecimal.valueOf( -1L ) ), req.getWalletId(), req.getAmount() );
+                List<EWWallet> walletList = dataLayer.query(sql, EWWallet.class, 
+            req.getDescription(), 
+            req.getAmount().multiply( BigDecimal.valueOf( -1L ) ), 
+            req.getWalletId(), 
+            req.getAmount().multiply( BigDecimal.valueOf( -1L ) ), 
+            req.getWalletId() 
+                );
                 CreditResp resp = new CreditResp();
                 resp.setWalletId( walletList.get( 0 ).getId() );
-                resp.setBalance(walletList.get( 0 ).getBalance() );
+                resp.setBalance( walletList.get( 0 ).getBalance() );
+                resp.setWalName( walletList.get( 0 ).getWalName() );
                 ctx.json( resp );
             }
         });
@@ -278,16 +298,23 @@ public class EWallet {
                            + "), " 
                            + "w as ( " 
                            + "    update ew_wallet " 
-                           + "    set balance = balance + 10 " 
+                           + "    set balance = balance + ? " 
                            + "    where ( id = ? ) " 
                            + "    returning * " 
                            + ") " 
                            + "select * " 
                            + "from w ";
-                List<EWWallet> walletList = dataLayer.query(sql, EWWallet.class, req.getDescription(), req.getAmount(), req.getWalletId(), req.getAmount() );
+                List<EWWallet> walletList = dataLayer.query(sql, EWWallet.class, 
+            req.getDescription(), 
+            req.getAmount(), 
+            req.getWalletId(), 
+            req.getAmount(), 
+            req.getWalletId()
+                );
                 CreditResp resp = new CreditResp();
                 resp.setWalletId( walletList.get( 0 ).getId() );
-                resp.setBalance(walletList.get( 0 ).getBalance() );
+                resp.setBalance( walletList.get( 0 ).getBalance() );
+                resp.setWalName( walletList.get( 0 ).getWalName() );
                 ctx.json( resp );
             }
         });

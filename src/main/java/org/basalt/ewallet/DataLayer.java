@@ -160,7 +160,6 @@ public class DataLayer {
             int rowsAffected = ps.executeUpdate();
             ps.close();
             conn.close();
-                    
             return( rowsAffected );
         }
         catch ( Exception e ) {
