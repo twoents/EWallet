@@ -49,6 +49,8 @@ public class EWallet {
             config.plugins.enableCors(cors -> {
                 cors.add(it -> {
                     it.reflectClientOrigin = true;
+                    it.allowCredentials = true;
+                    it.exposeHeader( "X-Custom");
                 });
             });
         });
@@ -68,7 +70,12 @@ public class EWallet {
         return( new Handler() {
             @Override
             public void handle(Context ctx) throws Exception {
-                String authHeader = ctx.header( "Authorization" );
+                if ( ctx.req().getMethod().equals( "POST") ) {
+                String authHeader = ctx.req().getHeader("X-Custom");
+                for ( String key : ctx.headerMap().keySet() ) {
+                    System.out.println( key + " => " + ctx.headerMap().get( key ));
+                }
+                        //header( "X-Auth" );
                 String token = authHeader.substring(6 );
                 
                 String sql = "with s as ( "
@@ -78,7 +85,7 @@ public class EWallet {
                            + "    and ( expiry_date < current_timestamp ) "
                            + "  returning * "
                            + ") "
-                           + "select * from t ";
+                           + "select * from s ";
                 List<EWSession> sessionList = dataLayer.query( sql, EWSession.class, token );
                 if ( !sessionList.isEmpty() ) {
                     ctx.attribute("userId", sessionList );
@@ -87,6 +94,7 @@ public class EWallet {
                     ctx.status( 401 );
                     ( ( JavalinServletContext )ctx ).getTasks().clear();
                 }
+            }
             }
         });
     }
