@@ -88,6 +88,9 @@ public class DataLayer {
                     if ( o instanceof java.sql.Date ) {
                         o = new java.util.Date( ( ( java.sql.Date )o ).getTime() );
                     }
+                    else if ( o  instanceof java.sql.Timestamp ) {
+                        o = new java.util.Date( ( ( java.sql.Timestamp )o ).getTime() );
+                    }
                     Method m = methods.get( colName );
                     if ( m != null ) {
                         m.invoke(t, o );
