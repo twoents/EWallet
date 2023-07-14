@@ -83,7 +83,7 @@ public class EWallet {
                            + "select * from s ";
                 List<EWSession> sessionList = dataLayer.query( sql, EWSession.class,  authHeader );
                 if ( !sessionList.isEmpty() ) {
-                    ctx.attribute("userId", sessionList.get(0).getUserId() );
+                    ctx.attribute("user_id", sessionList.get(0).getUserId() );
                 }
                 else {
                     ctx.status( 401 );
