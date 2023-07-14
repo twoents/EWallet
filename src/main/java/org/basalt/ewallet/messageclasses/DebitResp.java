@@ -2,20 +2,20 @@ package org.basalt.ewallet.messageclasses;
 
 import java.math.BigDecimal;
 
-public class BalanceResp {
-    private String walName;
+public class DebitResp {
+    private Long walletId;
     private BigDecimal balance;
 
+    public Long getWalletId() {
+        return walletId;
+    }
+    public void setWalletId(Long walletId) {
+        this.walletId = walletId;
+    }
     public BigDecimal getBalance() {
         return balance;
     }
     public void setBalance(BigDecimal balance) {
         this.balance = balance;
-    }
-    public String getWalName() {
-        return walName;
-    }
-    public void setWalName(String walName) {
-        this.walName = walName;
     }
 }

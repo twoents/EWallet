@@ -5,6 +5,7 @@ import org.basalt.ewallet.messageclasses.CreateAccountReq;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +13,11 @@ import java.util.UUID;
 import org.basalt.ewallet.dataclasses.EWSession;
 import org.basalt.ewallet.dataclasses.EWTransaction;
 import org.basalt.ewallet.dataclasses.EWUser;
+import org.basalt.ewallet.dataclasses.EWWallet;
+import org.basalt.ewallet.messageclasses.BalanceReq;
+import org.basalt.ewallet.messageclasses.BalanceResp;
+import org.basalt.ewallet.messageclasses.CreditResp;
+import org.basalt.ewallet.messageclasses.DebitReq;
 import org.basalt.ewallet.messageclasses.LoginReq;
 import org.basalt.ewallet.messageclasses.LoginResp;
 import org.basalt.ewallet.messageclasses.LogoutReq;
@@ -76,11 +82,21 @@ public class EWallet {
             @Override
             public void handle(Context ctx) throws Exception {
                 CreateAccountReq req = ctx.bodyAsClass(CreateAccountReq.class );
-                String sql = "insert into ew_user ( username, passhash ) "
-                           + "values ( ?, ? )";
-                Long userId = dataLayer.insertWithId(sql, req.getUsername(),  hashPassword(req.getPassword(),req.getUsername() ) );
-                //if ( userId >)
-                ctx.json( new CreateAccountResp( userId ) );
+                String sql = "with t as ( "
+                           + "  insert into ew_user ( username, passhash ) "
+                           + "  values ( ?, ? ) "
+                           + "  returning * "
+                           + "), "
+                           + "w as ( "
+                           + "    insert into ew_wallet "
+                           + "   ( wal_name, balance, user_id ) "
+                           + "    values ( 'primary', 0.00, ( select id from t ) ) "
+                           + "    returning * "
+                           + ") "
+                           + "select * "
+                           + "from t ";                
+                List<EWUser> userList = dataLayer.query(sql, EWUser.class, req.getClass(), req.getPassword() );
+                ctx.json( new CreateAccountResp( userList.get( 0 ).getId() ) );
             }
         });
     }
@@ -111,7 +127,8 @@ public class EWallet {
                         + "    values ( current_timestamp + interval '30 minutes', ?, ? ) " 
                         + "    returning * " 
                         + ") " 
-                        + "select * " 
+                        + "select *, "
+                        + "       ( select id from ew_wallet where ( user_id = ? ) ) as wallet_id " 
                         + "from ew_new_session";
                    List<EWSession> session = dataLayer.query(sql, EWSession.class,  user.getId(), uuid.toString(), user.getId());
                    resp.setStatus( "OK" );
@@ -187,7 +204,18 @@ public class EWallet {
         return( new Handler() {
             @Override
             public void handle(Context ctx) throws Exception {
-                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+                
+                Long userId = ctx.attribute("user_id" );
+                
+                BalanceReq req = ctx.bodyAsClass(BalanceReq.class );
+                String sql = "select * "
+                           + "from ew_wallet "
+                           + "where ( user_id = ? ) ";
+                List<EWWallet> walletList = dataLayer.query(sql, EWWallet.class, userId );
+                BalanceResp resp = new BalanceResp();
+                resp.setBalance( walletList.get( 0 ).getBalance() );
+                resp.setWalName( walletList.get( 0 ).getWalName() );
+                ctx.json(resp);
             }
         });
     }
@@ -196,7 +224,26 @@ public class EWallet {
         return( new Handler() {
             @Override
             public void handle(Context ctx) throws Exception {
-                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+                Long userId = ctx.attribute("user_id" );
+                DebitReq req = ctx.bodyAsClass( DebitReq.class );
+                String sql = "with t as ( " 
+                           + "    insert into ew_transaction " 
+                           + "    ( description, tx_date, amount, wallet_id ) " 
+                           + "    values ( ?, current_timestamp, ?, ? ) " 
+                           + "), " 
+                           + "w as ( " 
+                           + "    update ew_wallet " 
+                           + "    set balance = balance + 10 " 
+                           + "    where ( id = ? ) " 
+                           + "    returning * " 
+                           + ") " 
+                           + "select * " 
+                           + "from w ";
+                List<EWWallet> walletList = dataLayer.query(sql, EWWallet.class, req.getDescription(), req.getAmount().multiply( BigDecimal.valueOf( -1L ) ), req.getWalletId(), req.getAmount() );
+                CreditResp resp = new CreditResp();
+                resp.setId( walletList.get( 0 ).getId() );
+                resp.setBalance(walletList.get( 0 ).getBalance() );
+                ctx.json( resp );
             }
         });
     }
@@ -205,7 +252,26 @@ public class EWallet {
         return( new Handler() {
             @Override
             public void handle(Context ctx) throws Exception {
-                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+                Long userId = ctx.attribute("user_id" );
+                DebitReq req = ctx.bodyAsClass( DebitReq.class );
+                String sql = "with t as ( " 
+                           + "    insert into ew_transaction " 
+                           + "    ( description, tx_date, amount, wallet_id ) " 
+                           + "    values ( ?, current_timestamp, ?, ? ) " 
+                           + "), " 
+                           + "w as ( " 
+                           + "    update ew_wallet " 
+                           + "    set balance = balance + 10 " 
+                           + "    where ( id = ? ) " 
+                           + "    returning * " 
+                           + ") " 
+                           + "select * " 
+                           + "from w ";
+                List<EWWallet> walletList = dataLayer.query(sql, EWWallet.class, req.getDescription(), req.getAmount(), req.getWalletId(), req.getAmount() );
+                CreditResp resp = new CreditResp();
+                resp.setId( walletList.get( 0 ).getId() );
+                resp.setBalance(walletList.get( 0 ).getBalance() );
+                ctx.json( resp );
             }
         });
     }

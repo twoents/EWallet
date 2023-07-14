@@ -85,6 +85,9 @@ public class DataLayer {
                 for ( int i = 0; i < columnNames.length; i++ ) {
                     String colName = columnNames[i];
                     Object o = rs.getObject( colName );
+                    if ( o instanceof java.sql.Date ) {
+                        o = new java.util.Date( ( ( java.sql.Date )o ).getTime() );
+                    }
                     Method m = methods.get( colName );
                     if ( m != null ) {
                         m.invoke(t, o );

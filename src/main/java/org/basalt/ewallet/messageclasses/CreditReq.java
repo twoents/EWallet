@@ -1,13 +1,28 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package org.basalt.ewallet.messageclasses;
 
-/**
- *
- * @author Dewan
- */
+import java.math.BigDecimal;
+
 public class CreditReq {
-    
+    private Long walletId;
+    private String description;
+    private BigDecimal amount;
+
+    public Long getWalletId() {
+        return walletId;
+    }
+    public void setWalletId(Long walletId) {
+        this.walletId = walletId;
+    }
+    public String getDescription() {
+        return description;
+    }
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    public BigDecimal getAmount() {
+        return amount;
+    }
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
 }
