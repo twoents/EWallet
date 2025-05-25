@@ -48,7 +48,7 @@ public class EWallet {
     }
     
     
-    /*
+    /* --- test text --
 config.jsonMapper(new JavalinJackson().updateMapper(mapper -> {
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 });    
